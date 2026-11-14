@@ -6,7 +6,7 @@ pipeline {
     }
     environment {
         def appVersion = ""
-        acc_id = "160885265516"
+        acc_id = "722741356463"
         project = "roboshop"
         component = "catalogue"
     }
