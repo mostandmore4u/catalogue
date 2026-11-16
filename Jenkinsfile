@@ -5,7 +5,7 @@ pipeline {
         } 
     }
     environment {
-        appVersion = ""
+        def appVersion = ""
         acc_id = "722741356463"
         project = "roboshop"
         component = "catalogue"
@@ -47,7 +47,7 @@ pipeline {
                 script {
                     def scannerHome = tool 'sonar-8'
                     echo "Scanner home: ${scannerHome}"
-                    withSonarQubeEnv('sonar-8') {
+                    withSonarQubeEnv('sonar-server') {
                         sh "${scannerHome}/bin/sonar-scanner"
                     }
                 }
