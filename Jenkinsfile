@@ -73,6 +73,33 @@ pipeline {
                 }
             }
         }
+        stage('Dependabot Alerts') {
+            steps {
+                withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
+                    sh '''
+                        set +x
+                        HTTP_CODE=$(curl -sS -L -o dependabot-alerts.json -w "%{http_code}" -H "Accept: application/vnd.github+json" -H "Authorization: Bearer $GITHUB_TOKEN" -H "X-GitHub-Api-Version: 2026-03-10" "https://api.github.com/repos/mostandmore4u/catalogue/dependabot/alerts?state=open&severity=high,critical&per_page=100")
+                        if [ "$HTTP_CODE" != "200" ]; then
+                            echo "GitHub API returned HTTP $HTTP_CODE - cannot verify Dependabot alerts"
+                            cat dependabot-alerts.json
+                            exit 2
+                        fi
+                        node -e '
+                            const alerts = require("./dependabot-alerts.json");
+                            if (!Array.isArray(alerts)) { console.error("Unexpected API response"); process.exit(2); }
+                            const bad = alerts.filter(a => ["high", "critical"].includes(a.security_advisory.severity));
+                            if (bad.length === 0) { console.log("No open high/critical Dependabot alerts"); process.exit(0); }
+                            console.error(`Found ${bad.length} open high/critical Dependabot alert(s):`);
+                            bad.forEach(a => {
+                                const fix = a.security_vulnerability.first_patched_version ? a.security_vulnerability.first_patched_version.identifier : "none";
+                                console.error(` - #${a.number} [${a.security_advisory.severity}] ${a.dependency.package.name} ${a.security_advisory.cve_id || a.security_advisory.ghsa_id} (fixed in ${fix}) ${a.html_url}`);
+                            });
+                            process.exit(1);
+                        '
+                    '''
+                }
+            }
+        }
         stage('Docker Build') {
             steps {
                 script {
