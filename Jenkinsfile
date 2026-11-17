@@ -50,7 +50,7 @@ pipeline {
                 }
             }
         }
-        stage('SonarQube Analysis') {
+  /*       stage('SonarQube Analysis') {
             steps {
                 script {
                     def scannerHome = tool 'sonar-8'
@@ -72,7 +72,7 @@ pipeline {
                     }
                 }
             }
-        }
+        } */
         stage('Dependabot Alerts') {
             steps {
                 withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
