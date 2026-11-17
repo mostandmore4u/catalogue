@@ -155,7 +155,7 @@ app.get('/search/:text', (req, res) => {
 async function mongoConnect() {
     try {
         const mongoURL = process.env.MONGO_URL || 'mongodb://mongodb:27017/catalogue';
-        const client = await MongoClient.connect(mongoURL);
+        const client = await MongoClient.connect(mongoURL, { useNewUrlParser: true, useUnifiedTopology: true });
         db = client.db('catalogue');
         collection = db.collection('products');
         mongoConnected = true;
@@ -179,10 +179,6 @@ mongoLoop();
 
 // fire it up!
 const port = process.env.CATALOGUE_SERVER_PORT || '8080';
-if (require.main === module) {
-    app.listen(port, () => {
-        logger.info('Started on port', port);
-    });
-}
-
-module.exports = app;
+app.listen(port, () => {
+    logger.info('Started on port', port);
+});

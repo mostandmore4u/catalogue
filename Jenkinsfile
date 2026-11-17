@@ -5,6 +5,7 @@ pipeline {
         } 
     }
     environment {
+        def appVersion = ""
         acc_id = "722741356463"
         project = "roboshop"
         component = "catalogue"
@@ -27,8 +28,8 @@ pipeline {
                 script {
                     def packageJson = readJSON file: 'package.json'
                     // Extract the version property
-                    env.appVersion = packageJson.version
-                    echo "The application version is: ${env.appVersion}"
+                    appVersion = packageJson.version
+                    echo "The application version is: ${appVersion}"
                 }
             }
         }
@@ -80,14 +81,26 @@ pipeline {
                     withAWS(credentials: 'aws-creds', region: 'us-east-1') {
                         sh """
                             aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${acc_id}.dkr.ecr.us-east-1.amazonaws.com
-                            docker build -t ${acc_id}.dkr.ecr.us-east-1.amazonaws.com/${project}/${component}:${env.appVersion} .
-                            docker push ${acc_id}.dkr.ecr.us-east-1.amazonaws.com/${project}/${component}:${env.appVersion}
+                            docker build -t ${acc_id}.dkr.ecr.us-east-1.amazonaws.com/${project}/${component}:${appVersion} .
+                            docker push ${acc_id}.dkr.ecr.us-east-1.amazonaws.com/${project}/${component}:${appVersion}
                         """
                     }
                 }
             }
         }
         stage('Deploy') {
+            when {
+                // Evaluates the boolean parameter directly
+                expression { "${params.DEPLOY}" == "true" }
+            }
+            /* input {
+                message "Should we continue?"
+                ok "Yes, we should."
+                submitter "alice,bob"
+                parameters {
+                    string(name: 'PERSON', defaultValue: 'Mr Jenkins', description: 'Who should I say hello to?')
+                }
+            } */
             steps {
                 script {
                     sh """

@@ -95,20 +95,25 @@ describe('MongoDB disconnected', () => {
     let disconnectedApp;
 
     beforeAll(async () => {
+        process.env.CATALOGUE_SERVER_PORT = '8081';
         jest.resetModules();
 
-        jest.doMock('@instana/collector', () => {
+        jest.mock('@instana/collector', () => {
             const mock = jest.fn();
             mock.currentSpan = jest.fn(() => ({ annotate: jest.fn() }));
             return mock;
         });
-        jest.doMock('mongodb', () => ({
+        jest.mock('mongodb', () => ({
             MongoClient: { connect: jest.fn().mockRejectedValue(new Error('refused')) },
             ObjectId: jest.fn()
         }));
 
         disconnectedApp = require('../server');
         await new Promise(resolve => setTimeout(resolve, 100));
+    });
+
+    afterAll(() => {
+        delete process.env.CATALOGUE_SERVER_PORT;
     });
 
     test('GET /products returns 500', async () => {
