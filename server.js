@@ -28,7 +28,11 @@ let db;
 let collection;
 let mongoConnected = false;
 
-const app = express();
+ //const app = express();
+
+let app = express();
+app.disable("x-powered-by");
+
 
 app.use(expLogger);
 
